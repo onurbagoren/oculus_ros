@@ -11,11 +11,16 @@ OculusNode::OculusNode(const std::string& nodeName) :
     node_.param<std::string>("status_topic",     statusTopic_,    "status");
     node_.param<std::string>("raw_topic",        rawTopic_,       "raw");
     node_.param<std::string>("ping_image_topic", pingImageTopic_, "ping_image");
+    node_.param<std::string>("ping_image_compressed_visualization_topic",
+                              pingImageCompressedVisualizationTopic_,
+                              "ping_image_compressed_visualization");
 
     pingPublisher_   = node_.advertise<oculus_sonar::Ping>        (pingTopic_,      100);
     statusPublisher_ = node_.advertise<oculus_sonar::OculusStatus>(statusTopic_,    100);
     imagePublisher_  = node_.advertise<sensor_msgs::Image>        (pingImageTopic_, 100);
     rawPublisher_    = node_.advertise<oculus_sonar::Raw>         (rawTopic_,       100);
+    pingImageCompressedVisualizationPublisher_ =
+        node_.advertise<sensor_msgs::CompressedImage>(pingImageCompressedVisualizationTopic_, 100);
 
     node_.param<bool>("publish_without_subs", publishWithoutSubs_, false);
 
@@ -69,6 +74,10 @@ void OculusNode::ping_callback(const oculus::PingMessage::ConstPtr& ping)
         sensor_msgs::Image img;
         oculus::copy_to_ros(img, ping);
         imagePublisher_.publish(img);
+
+        sensor_msgs::CompressedImage imgCompressed;
+        oculus::copy_to_ros(imgCompressed, ping);
+        pingImageCompressedVisualizationPublisher_.publish(imgCompressed);
     }
 
     // This method is deprecated and will be removed in future release.
